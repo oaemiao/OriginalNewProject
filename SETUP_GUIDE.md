@@ -1,53 +1,17 @@
 # WinCC OA 项目 Git 协作指南
 
-## 首次克隆与启动（3 步）
-
-### Step 1: Clone
+## 首次克隆与启动
 
 ```bash
 git clone https://github.com/oaemiao/OriginalNewProject
 cd OriginalNewProject
 ```
 
-### Step 2: 运行 bootstrap 脚本
+打开 `config/config`，将 `proj_path` 改为本地实际路径，`pvss_path` 改为 WinCC OA 安装路径。然后用 WinCC OA Console 打开该项目。
 
-自动修正 `config/config` 中的 `proj_path` 和 `pvss_path` 为当前机器的路径：
+首次启动时，WinCC OA 会自动创建 `db/wincc_oa/VA_*/` 归档运行时目录和 `dbase.status`、`event.status` 等运行时标记文件。
 
-```powershell
-.\tools\bootstrap.ps1
-```
-
-脚本会自动检测 WinCC OA 安装路径（注册表/常见路径），如果检测失败会提示手动输入。
-
-完成后即可用 **WinCC OA Console** 打开该项目。
-
-### Step 3: 首次启动
-
-Console 打开项目并启动时，WinCC OA 会自动：
-- 创建 `db/wincc_oa/VA_*/` 归档运行时目录
-- 生成 `dbase.status`、`event.status` 等运行时标记文件
-
-> 系统核心 `.db`/`.key` 文件（`db/wincc_oa/*.db`、`db/wincc_oa/*.key`）已随 Git 跟踪，
-> 无需在启动时重新创建。
-
-> ⚠️ `config/config` 被 bootstrap 脚本修改后属于**本地专属改动**，不要 `git commit` 此文件。
-
----
-
-## bootstrap 脚本详细用法
-
-```powershell
-# 纯修复路径（推荐首次使用）
-.\tools\bootstrap.ps1
-
-# 指定 WinCC OA 安装路径
-.\tools\bootstrap.ps1 -WinCC_OAPath "C:/Siemens/Automation/WinCC_OA/3.19"
-
-# 修复路径后自动启动 Console
-.\tools\bootstrap.ps1 -WinCC_OAPath "C:/Siemens/Automation/WinCC_OA/3.19" -StartConsole
-```
-
-如果 `WinCC OA` 安装路径检测失败，脚本会进入交互模式等待输入。
+> 系统核心 `.db`/`.key` 文件（`db/wincc_oa/*.db`、`db/wincc_oa/*.key`）已随 Git 跟踪，clone 后即可使用。
 
 ---
 
