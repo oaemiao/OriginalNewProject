@@ -1,54 +1,67 @@
 # WinCC OA 项目 Git 协作指南
 
-## 首次克隆与启动
+## 首次克隆与启动（3 步）
+
+### Step 1: Clone
 
 ```bash
 git clone https://github.com/oaemiao/OriginalNewProject
+cd OriginalNewProject
 ```
 
-### 1. 修改项目路径（必改）
+### Step 2: 运行 bootstrap 脚本
 
-打开 `config/config`，将 `proj_path` 改为本地实际路径：
+自动修正 `config/config` 中的 `proj_path` 和 `pvss_path` 为当前机器的路径：
 
-```ini
-proj_path = "C:/Your/Actual/Path"
+```powershell
+.\tools\bootstrap.ps1
 ```
 
-> ⚠️ **此项每台机器必改**，`proj_path` 是绝对路径，每台机器 clone 位置不同。路径使用正斜杠 `/`。
+脚本会自动检测 WinCC OA 安装路径（注册表/常见路径），如果检测失败会提示手动输入。
 
-### 2. 启动项目
+完成后即可用 **WinCC OA Console** 打开该项目。
 
-用 WinCC OA Console 打开该项目，首次启动会自动：
+### Step 3: 首次启动
 
-- 根据 `.dbd` 定义初始化并分配 `.db`/`.key` 数据库文件
-- 创建 `db/wincc_oa/VA_*/` 归档目录（数量取决于 `config/progs` 中 `WCCOAvalarch -num` 的实例数：`-num 0` ~ `-num 5` 即 `VA_0000` ~ `VA_0005`）
+Console 打开项目并首次启动时，WinCC OA 会自动：
+- 根据 `.dbd` 定义创建 `.db`/`.key` 数据库文件
+- 创建 `db/wincc_oa/VA_*/` 归档运行时目录
 - 生成 `dbase.status`、`event.status` 等状态文件
 
-### 3. 首次启动后
+这些运行时文件已被 `.gitignore` 忽略，不会出现在 `git status` 中。
 
-首次启动生成的 `.db`/`.key` 等运行时文件已被 `.gitignore` 忽略，不会出现在 `git status` 中，无需处理。
+> ⚠️ `config/config` 被 bootstrap 脚本修改后属于**本地专属改动**，不要 `git commit` 此文件。
 
-### 4. 提交公共变更
+---
 
-```bash
-git add -A
-git commit -m "说明变更内容"
-git push
+## bootstrap 脚本详细用法
+
+```powershell
+# 纯修复路径（推荐首次使用）
+.\tools\bootstrap.ps1
+
+# 指定 WinCC OA 安装路径
+.\tools\bootstrap.ps1 -WinCC_OAPath "C:/Siemens/Automation/WinCC_OA/3.19"
+
+# 修复路径后自动启动 Console
+.\tools\bootstrap.ps1 -WinCC_OAPath "C:/Siemens/Automation/WinCC_OA/3.19" -StartConsole
 ```
 
-> 提交前请检查 `git status`，确保无 runtime 文件或私钥文件被意外加入。
+如果 `WinCC OA` 安装路径检测失败，脚本会进入交互模式等待输入。
+
+---
 
 ## .gitignore 要点
 
 | 规则 | 说明 |
 |------|------|
-| `bin/`, `log/`, `cache/`, `tmp/`, `pmon/` | 运行时自动创建的目录，内容无保留价值 |
+| `bin/`, `log/`, `cache/`, `tmp/`, `pmon/` | 运行时自动创建，无保留价值 |
 | `db/**/*.db`, `db/**/*.key`, `VA_*/` | 数据库运行时文件，从 `.dbd` 再生 |
 | `db/wincc_oa/vista.log`, `*.taf`, `dbase.*`, `event.status` | 运行时日志与状态标记 |
 | `**/private/`, `*.key`, `config/host-key.pem` | 私钥与敏感文件，禁止入库 |
-| `data/rcp/`, `data/rct/`, `data/sounds/` | 运行时子目录，启动时自动创建 |
-| `panels/**/*.ba?` | 面板编译产物，从 `.pnl` 再生 |
-| `*.ctc` | CTRL 脚本编译产物，从 `.ctl` 再生 |
+| `data/rcp/`, `data/rct/`, `data/sounds/` | 运行时子目录 |
+| `panels/**/*.ba?` | 面板编译产物 |
+| `*.ctc` | CTRL 脚本编译产物 |
 | `*.bak`, `*.tmp`, `~*`, `*.exe`, `*.rar` | 备份与临时文件 |
 | `__pycache__/`, `*.pyc`, `.vscode/`, `.idea/` | Python 与 IDE 产物 |
 | `dplist/*/elements/`, `dplist/*/variables/`, `dplist/_migration_draft/` | 迁移中间产物，可复现 |
@@ -71,13 +84,13 @@ git push
 - `main` — 仅存放跨机器通用的项目文件
 - 每台机器的首次启动变化（`.db` 初始化、`proj_path` 等）**不要合入 main**
 - 可在本地分支（如 `PC_xxx`）上提交机器特定的 `proj_path` 修改，方便日后参考
-- 验证分支（如 `PC_Astro`）测试完成后关闭即可，无需 PR 到 main
+- 验证分支测试完成后关闭即可，无需 PR 到 main
 
 ## 快照工具
 
 | 文件 | 说明 |
 |------|------|
-| `oa_project_snapshot.ps1` | 生成项目目录树与文件清单（脚本已跟踪） |
-| `generate_zh_tree.ps1` | 生成中文注释版目录树（脚本已跟踪） |
+| `oa_project_snapshot.ps1` | 生成项目目录树与文件清单 |
+| `generate_zh_tree.ps1` | 生成中文注释版目录树 |
 
-输出文件（`snapshot_*.txt`）为脚本生成物，已被 `.gitignore` 忽略，不在 Git 中跟踪。各机器可自由运行而不产生污染。
+输出文件（`snapshot_*.txt`）为脚本生成物，已被 `.gitignore` 忽略。
