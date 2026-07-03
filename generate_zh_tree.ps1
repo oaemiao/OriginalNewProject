@@ -1,4 +1,26 @@
-﻿$inputFile = "snapshot_tree.txt"
+﻿<#
+.SYNOPSIS
+  为 snapshot_tree.txt 每行追加中文注释说明，生成 snapshot_tree_zh.txt。
+
+.DESCRIPTION
+  读取 oa_project_snapshot.ps1 产出的 snapshot_tree.txt（UTF-16 BE），
+  对每个文件/目录项追加中文功能描述，输出为 UTF-8 编码的
+  snapshot_tree_zh.txt，便于团队快速了解项目结构。
+
+.NOTES
+  执行顺序：此脚本应在 oa_project_snapshot.ps1 之后执行。
+  注意事项：
+  - snapshot_tree.txt 必须已存在（由 oa_project_snapshot.ps1 生成）
+  - 输入文件编码为 UTF-16 BigEndian，不可随意另存
+  - 输出文件编码为 UTF-8（含 BOM），适合 git 跟踪
+  - 内置描述字典以文件/目录名匹配，同名项（如 examples
+    出现在 images/ panels/ scripts/ 下）会根据父目录上下文
+    自动匹配不同描述
+  - 新增文件/目录时需同步更新 $desc 字典
+  - 请在项目根目录下运行
+#>
+
+$inputFile = "snapshot_tree.txt"
 $outputFile = "snapshot_tree_zh.txt"
 
 $lines = Get-Content -LiteralPath $inputFile -Encoding BigEndianUnicode
