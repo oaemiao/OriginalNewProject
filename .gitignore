@@ -1,38 +1,52 @@
+# ====================================================================
+# 1. 系统 / IDE / 临时目录
+# ====================================================================
+
+# WinCC OA 运行时进程工作目录（启动时自动创建，停止时保留日志）
 bin
+
+# 运行时日志目录（每次启动追加，大小不定，机器相关）
 log
+
+# 运行时缓存目录（启动时自动重建）
 cache
 
-# data - runtime-only subdirectories
-data/rcp/
-data/rct/
-data/sounds/
+# 临时目录（运行中产生，内容无保留价值）
+tmp
+
+# Process Monitor 运行时数据
+pmon
+
+# 在线帮助文件（各语言独立，非核心源码）
+help
+
+# 消息/翻译文件（各语言独立，编译产物）
+msg/
+
+# 颜色数据库锁文件（多进程并发时产生，非固定内容）
+colorDB/.colorDB.lock
 
 # ====================================================================
-# db/ — 项目 RAID 数据库目录
+# 2. 数据库运行时（db/）—— 结构定义（.dbd）必须跟踪，运行时文件必须忽略
 # ====================================================================
-# db/ 目录本身不能完全忽略！其中的 .dbd 文件是项目数据库定义，
-# 描述数据模型、报警配置、归档策略等，是 WinCC OA 打开项目的
-# 必要条件。新机器 clone 后首次启动时，OA 会自动根据 .dbd 定义
-# 创建初始的 .db / .key 文件。
-#
-# 以下规则按"跟踪 vs 忽略"分类：
+# .dbd 文件定义数据库 schema（数据模型、报警配置、归档策略），
+# 是 WinCC OA 打开项目的必要条件。首次启动时 OA 自动根据 .dbd
+# 创建初始 .db / .key 文件。因此 .dbd 必须跟踪，.db/.key 必须忽略。
 
-# ---- 必须跟踪 ----
-# .dbd 数据库定义文件 —— 定义项目结构，几乎不变，无忽略规则。
-
-# ---- 必须忽略（运行时自动生成） ----
-# .db 运行时数据库文件 —— 每次启动分配/增长，机器相关
+# 运行时数据库文件 —— 每次启动大小变化，机器相关，从 .dbd 再生
 db/**/*.db
-# .key 运行时数据库索引文件 —— 同上
+
+# 运行时数据库索引文件 —— 同上
 db/**/*.key
 
 # VistaDB 运行时日志（每次运行生成，机器相关）
 db/wincc_oa/vista.log
+
 # TAF 事务归档文件（运行中持续写入，启停时重建）
 db/wincc_oa/wccoaone.taf
 db/wincc_oa/vista.taf
 
-# 数据库状态标记文件（启动创建/关闭删除）
+# 数据库状态标记文件（启动创建、关闭删除）
 db/wincc_oa/dbase.status
 db/wincc_oa/dbase.touch
 db/wincc_oa/event.status
@@ -41,26 +55,54 @@ db/wincc_oa/event.status
 # config/progs 中 WCCOAvalarch -num 的实例数）
 db/wincc_oa/VA_*/
 
-colorDB/.colorDB.lock
+# ====================================================================
+# 3. 敏感文件 —— 私钥 / 证书 / 密钥 (禁止入 Git)
+# ====================================================================
 
-help
-msg/
+# 所有 private 目录（IEC104、OPC UA 等 PKI 私钥目录）
+**/private/
 
-# scripts
-*.ctc
+# IEC104 和 OPC UA 的 .key 私钥文件（全局捕获）
+*.key
 
-# panels
+# OPC UA 客户端/服务端私钥（.pem 含 PRIVATE KEY 的条目）
+**/private/*.pem
+
+# Config 目录下的主机私钥（public cert 如 certificate.pem、
+# host-cert.pem、root-cert.pem 需分发，因此不被忽略）
+config/host-key.pem
+
+# ====================================================================
+# 4. data/ —— 运行时数据与目录占位
+# ====================================================================
+# data/ 存放模板、报告、声音等非敏感静态资源。以下运行时子目录
+# 启动时自动创建，内容无保留价值，不入 Git。
+
+data/rcp/
+data/rct/
+data/sounds/
+
+# ====================================================================
+# 5. 面板 —— 编译产物
+# ====================================================================
+
+# .ba? 是面板编译后的二进制文件，可从 .pnl 源码再生
 panels/**/*.ba?
+# 但 OAE* 面板特殊，需保留编译产物（外部引入，无源码）
 !panels/OAE*/
 
-# 过滤备份和临时文件
+# ====================================================================
+# 6. 备份 / 临时文件（通用规则）
+# ====================================================================
 *.bak
 *.tmp
 ~*
 *.exe
 *.rar
 
-# Python
+# ====================================================================
+# 7. Python 项目产物
+# ====================================================================
 __pycache__/
 *.py[cod]
 *.pyo
@@ -90,17 +132,17 @@ coverage.xml
 .mypy_cache/
 .pyre/
 .pytype/
+
+# ====================================================================
+# 8. IDE / 编辑器配置（保持各开发者独立）
+# ====================================================================
 .vscode/
 .idea/
-# End Python
 
-# 项目快照：脚本生成物（脚本 oa_project_snapshot.ps1 / generate_zh_tree.ps1 已跟踪）
-snapshot_files.txt
-snapshot_tree.txt
-snapshot_tree_zh.txt
-
-# WinCC 数据点迁移：脚本生成的中间产物与报告
-# (可由 dplist/WinCC/*.py + git 历史中的原始 *_Export.txt 再生，不入库)
+# ====================================================================
+# 9. dplist 迁移产物 —— 脚本生成的中间文件与报告
+# ====================================================================
+# WinCC 侧：由 dplist/WinCC/*.py 从原始 *_Export.txt 再生
 dplist/WinCC/elements/
 dplist/WinCC/variables/
 dplist/WinCC/P1_elements/
@@ -109,18 +151,36 @@ dplist/WinCC/P2_elements/
 dplist/WinCC/P2_variables/
 dplist/WinCC/P3_elements/
 dplist/WinCC/P3_variables/
-# winccoa/ 现兼放 OA 侧源(_address/ _dptype/，已跟踪)与生成产物；仅忽略生成的子项
+
+# OA 侧：生成产物（源文件 _address/ _dptype/ 已跟踪）
 dplist/winccoa/elements/
 dplist/winccoa/variables/
 dplist/winccoa/variables_skipped_flat_db_elements.csv
-# compare 产物：compare_elements_{deltas,dptypes}.csv 例外入库（结构 delta 基线，
-# 被 generate 消费/供人 review，已实测可逐字节重现——lockfile 模式，刷新后 review
-# diff 再提交）；renames(无消费者·case噪声)与 variables_deltas(默认链每跑必重生成)不入库
+
+# compare 产物：renames（无消费者·大小写噪声）和 variables_deltas
+# （链式运行每次都变动）不入库；elements_deltas/dptypes.csv 例外
+# 入库作为结构 delta 基线
 dplist/compare_elements_renames.csv
 dplist/compare_variables_deltas.csv
 
-# CodeBuddy 本地项目指引（不入库；项目指引以 CLAUDE.md 为准）
-CODEBUDDY.md
-
 # 迁移草稿与报告（由 generate_*.py / report.py 再生）
 dplist/_migration_draft/
+
+# ====================================================================
+# 10. 项目快照 —— 脚本生成物，可复现，不入 Git
+# ====================================================================
+# 由 oa_project_snapshot.ps1 / generate_zh_tree.ps1 生成（脚本已跟踪）
+snapshot_files.txt
+snapshot_tree.txt
+snapshot_tree_zh.txt
+
+# ====================================================================
+# 11. 本地专属配置（不入库；项目指引以 CLAUDE.md / SETUP_GUIDE.md 为准）
+# ====================================================================
+CODEBUDDY.md
+
+# ====================================================================
+# 12. 脚本编译产物
+# ====================================================================
+# .ctc 是 CTRL 脚本编译后的字节码，可从 .ctl 源码再生
+*.ctc
