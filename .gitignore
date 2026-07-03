@@ -7,9 +7,33 @@ data/rcp/
 data/rct/
 data/sounds/
 
-# database runtime files
+# ====================================================================
+# db/ — 项目 RAID 数据库目录
+# ====================================================================
+# db/ 目录本身不能 ignore！它包含项目核心数据模型、报警配置、
+# 归档策略等，是 WinCC OA 控制台打开项目的必要条件。
+# 首次从 git clone 后，必须保留 db/ 目录下的 .dbd(数据定义)/
+# .key(索引)/.db(初始数据库) 文件，项目才能正常初始化启动。
+#
+# 以下是 db/ 下每次运行都会自动变化/生成的运行时文件：
+
+# VistaDB 运行时日志（每次运行生成，机器相关）
 db/wincc_oa/vista.log
+# TAF 事务归档文件（运行中持续写入，启停时重建）
 db/wincc_oa/wccoaone.taf
+db/wincc_oa/vista.taf
+
+# 数据库状态标记文件（启动创建/关闭删除）
+db/wincc_oa/dbase.status
+db/wincc_oa/dbase.touch
+db/wincc_oa/event.status
+
+# VA_* 归档运行时目录（每次启动自动创建，包含：
+#   AR_* / AR_*.idp        — 归档数据段文件
+#   redolog0 / reqlog0     — 重做/请求日志（启停重建）
+#   *-statistic.csv/.txt   — 归档统计（关闭时生成）
+#   整个目录机器相关且不断增长，禁止入库）
+db/wincc_oa/VA_*/
 
 colorDB/.colorDB.lock
 
