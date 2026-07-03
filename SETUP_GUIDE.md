@@ -21,7 +21,7 @@ proj_path = "C:/Your/Actual/Path"
 用 WinCC OA Console 打开该项目，首次启动会自动：
 
 - 初始化并分配 .db/.key 数据库文件大小
-- 创建 `db/wincc_oa/VA_0000/` ~ `VA_0005/` 归档目录
+- 创建 `db/wincc_oa/VA_*/` 归档目录（数量取决于 `config/progs` 中 `WCCOAvalarch -num` 的实例数：`-num 0` ~ `-num 5` 即 `VA_0000` ~ `VA_0005`）
 - 生成 `dbase.status`、`event.status` 等状态文件
 
 ### 3. 首次启动后的提交（可选）
@@ -39,7 +39,7 @@ git commit -m "chore: first-startup database initialization"
 
 | 忽略 | 原因 |
 |------|------|
-| `VA_*/` | 归档运行时数据，每次启动重建，机器相关 |
+| `VA_*/` | 归档运行时数据，每次启动重建，机器相关（数量 = `WCCOAvalarch -num` 实例数） |
 | `dbase.status / .touch / event.status` | 运行状态标记，启停变化 |
 | `vista.log / vista.taf` | 运行时日志与事务文件 |
 | `bin/`、`help/`、`msg/` | 随 OA 安装自带，无需入库 |
