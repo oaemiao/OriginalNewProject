@@ -1,0 +1,91 @@
+bin
+log
+cache
+
+# data - runtime-only subdirectories
+data/rcp/
+data/rct/
+data/sounds/
+
+# database runtime files
+db/wincc_oa/vista.log
+db/wincc_oa/wccoaone.taf
+
+colorDB/.colorDB.lock
+
+help
+msg/
+
+# scripts
+*.ctc
+
+# panels
+panels/**/*.ba?
+!panels/OAE*/
+
+# 过滤备份和临时文件
+*.bak
+*.tmp
+~*
+*.exe
+*.rar
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+build/
+dist/
+pip-wheel-metadata/
+env/
+venv/
+.venv
+.env
+.env.*
+.python-version
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+.ipynb_checkpoints
+.mypy_cache/
+.pyre/
+.pytype/
+.vscode/
+.idea/
+# End Python
+
+# WinCC 数据点迁移：脚本生成的中间产物与报告
+# (可由 dplist/WinCC/*.py + git 历史中的原始 *_Export.txt 再生，不入库)
+dplist/WinCC/elements/
+dplist/WinCC/variables/
+dplist/WinCC/P1_elements/
+dplist/WinCC/P1_variables/
+dplist/WinCC/P2_elements/
+dplist/WinCC/P2_variables/
+dplist/WinCC/P3_elements/
+dplist/WinCC/P3_variables/
+# winccoa/ 现兼放 OA 侧源(_address/ _dptype/，已跟踪)与生成产物；仅忽略生成的子项
+dplist/winccoa/elements/
+dplist/winccoa/variables/
+dplist/winccoa/variables_skipped_flat_db_elements.csv
+# compare 产物：compare_elements_{deltas,dptypes}.csv 例外入库（结构 delta 基线，
+# 被 generate 消费/供人 review，已实测可逐字节重现——lockfile 模式，刷新后 review
+# diff 再提交）；renames(无消费者·case噪声)与 variables_deltas(默认链每跑必重生成)不入库
+dplist/compare_elements_renames.csv
+dplist/compare_variables_deltas.csv
+
+# CodeBuddy 本地项目指引（不入库；项目指引以 CLAUDE.md 为准）
+CODEBUDDY.md
+
+# 迁移草稿与报告（由 generate_*.py / report.py 再生）
+dplist/_migration_draft/

@@ -1,0 +1,6 @@
+[general]
+pvss_path = "C:/Siemens/Automation/WinCC_OA/3.17"
+proj_path = "D:/WinCC_OA_Proj/OriginalNewProject"
+proj_version = "3.17"
+langs = "en_US.utf8"
+langs = "zh_CN.utf8"
