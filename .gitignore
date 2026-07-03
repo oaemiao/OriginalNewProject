@@ -27,17 +27,26 @@ msg/
 colorDB/.colorDB.lock
 
 # ====================================================================
-# 2. 数据库运行时（db/）—— 结构定义（.dbd）必须跟踪，运行时文件必须忽略
+# 2. 数据库（db/）—— 结构定义（.dbd）+ 系统核心数据库（.db/.key）必须跟踪，
+#     归档子目录运行时文件必须忽略
 # ====================================================================
-# .dbd 文件定义数据库 schema（数据模型、报警配置、归档策略），
-# 是 WinCC OA 打开项目的必要条件。首次启动时 OA 自动根据 .dbd
-# 创建初始 .db / .key 文件。因此 .dbd 必须跟踪，.db/.key 必须忽略。
+# .dbd 文件定义数据库 schema，必须跟踪。
+# 系统 .db/.key 文件（db/wincc_oa/*.db 和 *.key）是 WinCC OA 启动时
+# DataManager 必须 OPEN 的核心数据库——没有它们 WCCILdata 无法初始化
+# （报错如 "TypeAndIdDb, open: No such file or directory"），因此必须跟踪。
+# 而归档子目录（0000000000/, al*/ VA_*/ 等）内的 .db/.key 是运行时生成的
+# 历史数据，每次启动变化，机器相关，可以忽略。
+#
+# 实现方式：先全部忽略，再用 ! 排除规则只保留根层级的系统文件。
 
-# 运行时数据库文件 —— 每次启动大小变化，机器相关，从 .dbd 再生
+# 忽略 db/ 下全部 .db 和 .key（包括归档子目录内的运行时文件）
 db/**/*.db
-
-# 运行时数据库索引文件 —— 同上
 db/**/*.key
+
+# 但保留 db/wincc_oa/ 根层级的系统数据库文件（不包含子目录）
+# 这些是 WCCILdata 启动时必须 OPEN 的核心文件
+!db/wincc_oa/*.db
+!db/wincc_oa/*.key
 
 # VistaDB 运行时日志（每次运行生成，机器相关）
 db/wincc_oa/vista.log
@@ -62,8 +71,9 @@ db/wincc_oa/VA_*/
 # 所有 private 目录（IEC104、OPC UA 等 PKI 私钥目录）
 **/private/
 
-# IEC104 和 OPC UA 的 .key 私钥文件（全局捕获）
-*.key
+# IEC104 和 OPC UA 的 .key 私钥文件（仅在 PKI private 目录内匹配，
+# 不会误伤 db/wincc_oa/*.key 数据库索引文件）
+**/private/*.key
 
 # OPC UA 客户端/服务端私钥（.pem 含 PRIVATE KEY 的条目）
 **/private/*.pem
