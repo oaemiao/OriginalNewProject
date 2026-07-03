@@ -23,12 +23,12 @@ cd OriginalNewProject
 
 ### Step 3: 首次启动
 
-Console 打开项目并首次启动时，WinCC OA 会自动：
-- 根据 `.dbd` 定义创建 `.db`/`.key` 数据库文件
+Console 打开项目并启动时，WinCC OA 会自动：
 - 创建 `db/wincc_oa/VA_*/` 归档运行时目录
-- 生成 `dbase.status`、`event.status` 等状态文件
+- 生成 `dbase.status`、`event.status` 等运行时标记文件
 
-这些运行时文件已被 `.gitignore` 忽略，不会出现在 `git status` 中。
+> 系统核心 `.db`/`.key` 文件（`db/wincc_oa/*.db`、`db/wincc_oa/*.key`）已随 Git 跟踪，
+> 无需在启动时重新创建。
 
 > ⚠️ `config/config` 被 bootstrap 脚本修改后属于**本地专属改动**，不要 `git commit` 此文件。
 
@@ -56,7 +56,7 @@ Console 打开项目并首次启动时，WinCC OA 会自动：
 | 规则 | 说明 |
 |------|------|
 | `bin/`, `log/`, `cache/`, `tmp/`, `pmon/` | 运行时自动创建，无保留价值 |
-| `db/**/*.db`, `db/**/*.key`, `VA_*/` | 数据库运行时文件，从 `.dbd` 再生 |
+| `db/**/*.db`, `db/**/*.key` | 归档子目录运行时数据；`db/wincc_oa/` 根层系统文件例外（! 排除规则） |
 | `db/wincc_oa/vista.log`, `*.taf`, `dbase.*`, `event.status` | 运行时日志与状态标记 |
 | `**/private/`, `*.key`, `config/host-key.pem` | 私钥与敏感文件，禁止入库 |
 | `data/rcp/`, `data/rct/`, `data/sounds/` | 运行时子目录 |
@@ -71,13 +71,16 @@ Console 打开项目并首次启动时，WinCC OA 会自动：
 | **必须跟踪** | 说明 |
 |-------------|------|
 | `config/` (不含 `host-key.pem`) | 项目配置，分发必须 |
-| `db/**/*.dbd` | 数据库定义，从零重建的起点 |
+| `db/**/*.dbd` | 数据库 schema 定义 |
+| `db/wincc_oa/*.db` 和 `*.key` | 系统核心数据库文件，WCCILdata 启动时必须 OPEN |
 | `panels/`、`scripts/` | UI 面板与 CONTROL 脚本 |
 | `pictures/`、`images/` | 图片资源 |
 | `data/Reporting/Templates/` | BIRT/SSRS 报表模板 |
 | `data/xls_report/` | Excel 报表模板 |
 | `data/iec104/PKI/certs/*.crt` | 公开证书（非私钥） |
 | `data/opcua/client(PKI|server/PKI/CA/certs/*.der` | 公开证书（非私钥） |
+
+> **关于 `db/` 中的 `.db`/`.key` 文件**：`db/wincc_oa/` 根层级的系统数据库文件（约 1.4 MB）**必须跟踪**，否则 DataManager 在另一台机器上会报 "TypeAndIdDb, open: No such file or directory" 错误。归档子目录（`0000000000/`, `al*`, `VA_*` 等）内的运行时 `.db`/`.key` 继续忽略。
 
 ## 分支策略建议
 
