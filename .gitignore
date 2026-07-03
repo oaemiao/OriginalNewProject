@@ -94,6 +94,11 @@ coverage.xml
 .idea/
 # End Python
 
+# 项目快照：脚本生成物（脚本 oa_project_snapshot.ps1 / generate_zh_tree.ps1 已跟踪）
+snapshot_files.txt
+snapshot_tree.txt
+snapshot_tree_zh.txt
+
 # WinCC 数据点迁移：脚本生成的中间产物与报告
 # (可由 dplist/WinCC/*.py + git 历史中的原始 *_Export.txt 再生，不入库)
 dplist/WinCC/elements/
