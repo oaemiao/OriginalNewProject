@@ -54,7 +54,7 @@ $projPathLine = 'proj_path = "' + $PROJ_ROOT.Replace('\', '/') + '"'
 
 if ($config -match 'proj_path\s*=') {
     $config = $config -replace 'proj_path\s*=.*', $projPathLine
-    Write-Host "[1/3] proj_path 已修正为: $($PROJ_ROOT.Replace('\', '/'))" -ForegroundColor Green
+    Write-Host "[1/4] proj_path 已修正为: $($PROJ_ROOT.Replace('\', '/'))" -ForegroundColor Green
 } else {
     Write-Warning "config/config 中未找到 proj_path，请手动检查文件格式"
 }
@@ -109,15 +109,37 @@ $pvssPathLine = 'pvss_path = "' + $WinCC_OAPath + '"'
 
 if ($config -match 'pvss_path\s*=') {
     $config = $config -replace 'pvss_path\s*=.*', $pvssPathLine
-    Write-Host "[2/3] pvss_path 已设为: $WinCC_OAPath" -ForegroundColor Green
+    Write-Host "[2/4] pvss_path 已设为: $WinCC_OAPath" -ForegroundColor Green
 } else {
     Write-Warning "config/config 中未找到 pvss_path，请手动检查"
 }
 
 # ------------------------------------------------------------
-# Step 3: 验证项目结构
+# Step 3: 标记运行时数据库文件为 skip-worktree（防止误提交启停变更）
 # ------------------------------------------------------------
-Write-Host "[3/3] 验证项目结构..." -ForegroundColor Green
+Write-Host "[3/4] 设置 skip-worktree（屏蔽运行时数据库启停噪声）..." -ForegroundColor Green
+$skipWorktreeDirs = @(
+    "db/wincc_oa/al0000000000",
+    "db/wincc_oa/aloverflow",
+    "db/wincc_oa/alliving",
+    "db/wincc_oa/lastval"
+)
+$total = 0
+foreach ($d in $skipWorktreeDirs) {
+    $files = git -C $PROJ_ROOT ls-files "$d/*.db" "$d/*.key"
+    if ($files) {
+        $files | ForEach-Object { git -C $PROJ_ROOT update-index --skip-worktree $_ }
+        $cnt = ($files | Measure-Object).Count
+        $total += $cnt
+        Write-Host "  $d : $cnt files" -ForegroundColor Gray
+    }
+}
+Write-Host "  skip-worktree 已设置 $total 个文件" -ForegroundColor Green
+
+# ------------------------------------------------------------
+# Step 4: 验证项目结构
+# ------------------------------------------------------------
+Write-Host "[4/4] 验证项目结构..." -ForegroundColor Green
 
 $requiredDirs = @("config", "db", "panels", "scripts", "data")
 $missingDirs = @()
@@ -154,8 +176,8 @@ Write-Host ""
 Write-Host "注意事项:" -ForegroundColor Yellow
 Write-Host "  1. config/config 已被修改为当前机器路径" -ForegroundColor Yellow
 Write-Host "  2. 此修改是机器特定的，不要 git commit 此改动" -ForegroundColor Yellow
-Write-Host "  3. 每次在新机器 clone 后都需要重新运行本脚本" -ForegroundColor Yellow
-Write-Host "  4. 首次启动时 WinCC OA 会自动从 .dbd 创建 .db/.key 文件" -ForegroundColor Yellow
+Write-Host "  3. skip-worktree 已设置，运行时 .db/.key 变更不会出现在 git status 中" -ForegroundColor Yellow
+Write-Host "  4. 每次在新机器 clone 后都需要重新运行本脚本" -ForegroundColor Yellow
 Write-Host ""
 
 # ------------------------------------------------------------

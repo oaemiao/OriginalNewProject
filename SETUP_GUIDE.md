@@ -7,11 +7,23 @@ git clone https://github.com/oaemiao/OriginalNewProject
 cd OriginalNewProject
 ```
 
-打开 `config/config`，将 `proj_path` 改为本地实际路径，`pvss_path` 改为 WinCC OA 安装路径。然后用 WinCC OA Console 打开该项目。
+打开 `config/config`，将 `proj_path` 改为本地实际路径，`pvss_path` 改为 WinCC OA 安装路径。
 
-首次启动时，WinCC OA 会自动创建 `db/wincc_oa/VA_*/` 归档运行时目录和 `dbase.status`、`event.status` 等运行时标记文件。
+然后运行以下命令，标记运行时数据库文件为本地忽略（它们随仓库分发，但每次启停会变更，不应误提交）：
+```powershell
+git ls-files "db/wincc_oa/al0000000000/*.db" "db/wincc_oa/al0000000000/*.key" |
+  ForEach-Object { git update-index --skip-worktree $_ }
+git ls-files "db/wincc_oa/aloverflow/*.db" "db/wincc_oa/aloverflow/*.key" |
+  ForEach-Object { git update-index --skip-worktree $_ }
+git ls-files "db/wincc_oa/alliving/*.db" "db/wincc_oa/alliving/*.key" |
+  ForEach-Object { git update-index --skip-worktree $_ }
+git ls-files "db/wincc_oa/lastval/*.db" "db/wincc_oa/lastval/*.key" |
+  ForEach-Object { git update-index --skip-worktree $_ }
+```
 
-> 系统核心 `.db`/`.key` 文件（`db/wincc_oa/*.db`、`db/wincc_oa/*.key`）已随 Git 跟踪，clone 后即可使用。
+然后用 WinCC OA Console 打开该项目。首次启动时，WinCC OA 会自动创建 `db/wincc_oa/VA_*/` 归档运行时目录和 `dbase.status`、`event.status` 等运行时标记文件。
+
+> 所有 `.db`/`.key` 文件均随 Git 跟踪（`VA_*` 归档运行时除外），clone 后即可使用。报警归档、在线报警、最后值缓存目录（`al*`、`alliving`、`lastval`）的启停变更通过 `skip-worktree` 屏蔽。
 
 ---
 
@@ -20,9 +32,9 @@ cd OriginalNewProject
 | 规则 | 说明 |
 |------|------|
 | `bin/`, `log/`, `cache/`, `tmp/`, `pmon/` | 运行时自动创建，无保留价值 |
-| `db/**/*.db`, `db/**/*.key` | 归档子目录运行时数据；`db/wincc_oa/` 根层系统文件例外（! 排除规则） |
+| `db/wincc_oa/VA_*/` | 值归档运行时目录（45 MB+，每次启动重建） |
 | `db/wincc_oa/vista.log`, `*.taf`, `dbase.*`, `event.status` | 运行时日志与状态标记 |
-| `**/private/`, `*.key`, `config/host-key.pem` | 私钥与敏感文件，禁止入库 |
+| `**/private/`, `**/private/*.key`, `**/private/*.pem` | 私钥与敏感文件 |
 | `data/rcp/`, `data/rct/`, `data/sounds/` | 运行时子目录 |
 | `panels/**/*.ba?` | 面板编译产物 |
 | `*.ctc` | CTRL 脚本编译产物 |
@@ -34,9 +46,9 @@ cd OriginalNewProject
 
 | **必须跟踪** | 说明 |
 |-------------|------|
-| `config/` (不含 `host-key.pem`) | 项目配置，分发必须 |
+| `config/`（含 `host-key.pem`） | 项目配置（开发密钥一起分发） |
 | `db/**/*.dbd` | 数据库 schema 定义 |
-| `db/wincc_oa/*.db` 和 `*.key` | 系统核心数据库文件，WCCILdata 启动时必须 OPEN |
+| `db/wincc_oa/` 全部 `.db`/`.key`（`VA_*` 除外） | 所有数据库文件，DataManager 启动时必须 OPEN |
 | `panels/`、`scripts/` | UI 面板与 CONTROL 脚本 |
 | `pictures/`、`images/` | 图片资源 |
 | `data/Reporting/Templates/` | BIRT/SSRS 报表模板 |
@@ -44,7 +56,9 @@ cd OriginalNewProject
 | `data/iec104/PKI/certs/*.crt` | 公开证书（非私钥） |
 | `data/opcua/client(PKI|server/PKI/CA/certs/*.der` | 公开证书（非私钥） |
 
-> **关于 `db/` 中的 `.db`/`.key` 文件**：`db/wincc_oa/` 根层级的系统数据库文件（约 1.4 MB）**必须跟踪**，否则 DataManager 在另一台机器上会报 "TypeAndIdDb, open: No such file or directory" 错误。归档子目录（`0000000000/`, `al*`, `VA_*` 等）内的运行时 `.db`/`.key` 继续忽略。
+> **关于 `.db`/`.key`**：所有运行时数据库文件全部跟踪（除 `VA_*`）。
+> 报警归档（`al*`）和最后值缓存（`lastval/`）的启停变更通过 `git update-index --skip-worktree` 屏蔽，不会出现在 `git status` 中。
+> 仅当 `.dbd` 变更需要同步更新 `.db` 时，才取消 skip-worktree 并重新提交对应 `.db` 文件。
 
 ## 分支策略建议
 
