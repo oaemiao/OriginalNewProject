@@ -1,3 +1,45 @@
+# OriginalNewProject — WinCC OA Git 托管模板
+
+## 本项目的目的
+
+这是一个** WinCC OA 项目 Git 托管模板仓库**。它包含一套经实战验证的 `.gitignore` 规则（含中文注释说明每项规则的原因）和项目结构基线，解决 WinCC OA 项目跨机器 clone 后 DataManager 因缺少 `.db`/`.key` 文件无法启动的问题。
+
+核心结论：**所有 `.db`/`.key` 文件必须跟踪**（`VA_*` 归档运行时除外），因为 WinCC OA DataManager 启动时 OPEN 这些文件，不会从 `.dbd` 创建。
+
+---
+
+## 用法
+
+### 场景 A：已有生产项目要托管到 Git
+
+1. `git init` 初始化空仓库
+2. 从这个仓库复制以下文件到你的项目根目录：
+   - `.gitignore` — 关键的忽略规则
+   - `.gitattributes`（如果有）
+3. 检查 `.gitignore` 中的路径规则是否匹配你的项目结构，必要时调整
+4. `git add .` 然后提交（注意 `.db`/`.key` 必须全部进跟踪）
+
+### 场景 B：新建生产项目（通过 WinCC OA Console 向导创建）并托管到 Git
+
+1. 用 Console 向导创建新项目（会自动生成 `db/wincc_oa/0000000000/DpList.dbd` 等基线文件）
+2. Console 中启动→停止项目一次（让所有数据库完整初始化）
+3. 从这个仓库复制以下文件到你的项目根目录：
+   - `.gitignore`
+   - `.gitattributes`（如果有）
+4. 检查 `.gitignore` 路径规则是否匹配
+5. `git init` → `git add .` → 首次提交
+
+### 场景 C：基于此模板直接使用（clone 即用）
+
+```bash
+git clone <本仓库URL>
+cd OriginalNewProject
+```
+
+然后参考下文[首次克隆与启动](#首次克隆与启动)。
+
+---
+
 # WinCC OA 项目 Git 协作指南
 
 ## 首次克隆与启动
