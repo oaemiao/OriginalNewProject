@@ -27,28 +27,18 @@ msg/
 colorDB/.colorDB.lock
 
 # ====================================================================
-# 2. 数据库（db/）—— 结构定义（.dbd）+ 系统核心数据库（.db/.key）必须跟踪，
-#     归档子目录运行时文件必须忽略
+# 2. 数据库（db/）—— 所有有 .dbd 定义的目录，其 .db/.key 全跟踪
 # ====================================================================
-# .dbd 文件定义数据库 schema，必须跟踪。
-# 系统 .db/.key 文件（db/wincc_oa/*.db 和 *.key）是 WinCC OA 启动时
-# DataManager 必须 OPEN 的核心数据库——没有它们 WCCILdata 无法初始化
-# （报错如 "TypeAndIdDb, open: No such file or directory"），因此必须跟踪。
-# 而归档子目录（0000000000/, al*/ VA_*/ 等）内的 .db/.key 是运行时生成的
-# 历史数据，每次启动变化，机器相关，可以忽略。
-#
-# 实现方式：先全部忽略，再用 ! 排除规则只保留根层级的系统文件。
+# WinCC OA DataManager（WCCILdata）启动时必须 OPEN 数据库文件，
+# 不会从 .dbd 自动创建 .db/.key。因此所有定义了 .dbd 的目录，
+# 其 .db/.key 都必须存在于磁盘上。以下只忽略纯运行时目录和日志，
+# 其余 .db/.key 全部跟踪。
 
-# 忽略 db/ 下全部 .db 和 .key（包括归档子目录内的运行时文件）
-db/**/*.db
-db/**/*.key
+# VA_* 值归档运行时目录（数量取决于 config/progs 中
+# WCCOAvalarch -num 的实例数，每次启动自动创建）
+db/wincc_oa/VA_*/
 
-# 但保留 db/wincc_oa/ 根层级的系统数据库文件（不包含子目录）
-# 这些是 WCCILdata 启动时必须 OPEN 的核心文件
-!db/wincc_oa/*.db
-!db/wincc_oa/*.key
-
-# VistaDB 运行时日志（每次运行生成，机器相关）
+# VistaDB 运行时日志（每次运行生成）
 db/wincc_oa/vista.log
 
 # TAF 事务归档文件（运行中持续写入，启停时重建）
@@ -59,10 +49,6 @@ db/wincc_oa/vista.taf
 db/wincc_oa/dbase.status
 db/wincc_oa/dbase.touch
 db/wincc_oa/event.status
-
-# VA_* 归档运行时目录（每次启动自动创建，数量取决于
-# config/progs 中 WCCOAvalarch -num 的实例数）
-db/wincc_oa/VA_*/
 
 # ====================================================================
 # 3. 敏感文件 —— 私钥 / 证书 / 密钥 (禁止入 Git)
