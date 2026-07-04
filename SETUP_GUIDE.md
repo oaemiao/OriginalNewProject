@@ -7,21 +7,9 @@ git clone https://github.com/oaemiao/OriginalNewProject
 cd OriginalNewProject
 ```
 
-打开 `config/config`，将 `proj_path` 改为本地实际路径，`pvss_path` 改为 WinCC OA 安装路径。
+打开 `config/config`，将 `proj_path` 改为本地实际路径，`pvss_path` 改为 WinCC OA 安装路径。然后用 WinCC OA Console 打开该项目。
 
-然后运行以下命令，标记运行时数据库文件为本地忽略（它们随仓库分发，但每次启停会变更，不应误提交）：
-```powershell
-git ls-files "db/wincc_oa/al0000000000/*.db" "db/wincc_oa/al0000000000/*.key" |
-  ForEach-Object { git update-index --skip-worktree $_ }
-git ls-files "db/wincc_oa/aloverflow/*.db" "db/wincc_oa/aloverflow/*.key" |
-  ForEach-Object { git update-index --skip-worktree $_ }
-git ls-files "db/wincc_oa/alliving/*.db" "db/wincc_oa/alliving/*.key" |
-  ForEach-Object { git update-index --skip-worktree $_ }
-git ls-files "db/wincc_oa/lastval/*.db" "db/wincc_oa/lastval/*.key" |
-  ForEach-Object { git update-index --skip-worktree $_ }
-```
-
-然后用 WinCC OA Console 打开该项目。首次启动时，WinCC OA 会自动创建 `db/wincc_oa/VA_*/` 归档运行时目录和 `dbase.status`、`event.status` 等运行时标记文件。
+首次启动时，WinCC OA 会自动创建 `db/wincc_oa/VA_*/` 归档运行时目录和 `dbase.status`、`event.status` 等运行时标记文件。
 
 > 所有 `.db`/`.key` 文件均随 Git 跟踪（`VA_*` 归档运行时除外），clone 后即可使用。报警归档、在线报警、最后值缓存目录（`al*`、`alliving`、`lastval`）的启停变更通过 `skip-worktree` 屏蔽。
 
@@ -75,3 +63,24 @@ git ls-files "db/wincc_oa/lastval/*.db" "db/wincc_oa/lastval/*.key" |
 | `generate_zh_tree.ps1` | 生成中文注释版目录树 |
 
 输出文件（`snapshot_*.txt`）为脚本生成物，已被 `.gitignore` 忽略。
+
+## 本地避免启停噪声
+
+运行时数据库文件（`al*`/`alliving`/`lastval`）每次启停都会变更。可运行以下命令标记它们为本地忽略，使其不出现在 `git status` 中：
+
+```powershell
+git ls-files "db/wincc_oa/al0000000000/*.db" "db/wincc_oa/al0000000000/*.key" |
+  ForEach-Object { git update-index --skip-worktree $_ }
+git ls-files "db/wincc_oa/aloverflow/*.db" "db/wincc_oa/aloverflow/*.key" |
+  ForEach-Object { git update-index --skip-worktree $_ }
+git ls-files "db/wincc_oa/alliving/*.db" "db/wincc_oa/alliving/*.key" |
+  ForEach-Object { git update-index --skip-worktree $_ }
+git ls-files "db/wincc_oa/lastval/*.db" "db/wincc_oa/lastval/*.key" |
+  ForEach-Object { git update-index --skip-worktree $_ }
+```
+
+需要提交这些文件时（如 `.dbd` 变更需同步更新 `.db`），先取消标记：
+```powershell
+git ls-files "db/wincc_oa/al0000000000/*.db" ... |
+  ForEach-Object { git update-index --no-skip-worktree $_ }
+```
