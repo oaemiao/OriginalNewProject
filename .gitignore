@@ -50,15 +50,6 @@ db/wincc_oa/dbase.status
 db/wincc_oa/dbase.touch
 db/wincc_oa/event.status
 
-# 报警归档/在线报警/最后值数据库文件（运行时数据，每次启停变更，
-# 由 WCCOAalarm 等 manager 自动创建，不需跟踪）
-db/wincc_oa/al0000000000/*.db
-db/wincc_oa/al0000000000/*.key
-db/wincc_oa/alliving/*.db
-db/wincc_oa/alliving/*.key
-db/wincc_oa/lastval/*.db
-db/wincc_oa/lastval/*.key
-
 # ====================================================================
 # 3. 敏感文件 —— 私钥 / 证书 / 密钥 (禁止入 Git)
 # ====================================================================
