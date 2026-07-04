@@ -27,12 +27,23 @@ msg/
 colorDB/.colorDB.lock
 
 # ====================================================================
-# 2. 数据库（db/）—— 所有有 .dbd 定义的目录，其 .db/.key 全跟踪
+# 2. 数据库（db/）
 # ====================================================================
-# WinCC OA DataManager（WCCILdata）启动时必须 OPEN 数据库文件，
-# 不会从 .dbd 自动创建 .db/.key。因此所有定义了 .dbd 的目录，
-# 其 .db/.key 都必须存在于磁盘上。以下只忽略纯运行时目录和日志，
-# 其余 .db/.key 全部跟踪。
+# 【核心结论】所有 .db/.key 文件必须跟踪（VA_* 归档运行时除外）。
+# 原因：WinCC OA DataManager（WCCILdata）启动时 OPEN 这些文件，
+# 不从 .dbd 创建。缺失会导致：
+#   RAIMA Database Error Code:-905, errno=2: No such file or directory
+#   第一个失败点在 TypeAndIdDb，然后是 StAlertRec, FindBackGlobal。
+#
+# 【将此 .gitignore 用于其他项目时】
+# ❌ 绝不添加：db/**/*.db 或 db/**/*.key（会忽略全部子目录数据库文件）
+# ✅ 应只添加以下运行时忽略项，其余 .db/.key 全部进跟踪
+#
+# 【新建项目首次提交前】
+# 务必在 Console 中启动→停止一次，确保 .db/.key 被 Manager 完整初始化
+# （clean shutdown 状态），否则 clone 后会触发 dbcheck 修复。
+#
+# ---------- 以下是可安全忽略的纯运行时文件 ----------
 
 # VA_* 值归档运行时目录（数量取决于 config/progs 中
 # WCCOAvalarch -num 的实例数，每次启动自动创建）
