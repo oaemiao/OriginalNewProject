@@ -64,23 +64,4 @@ cd OriginalNewProject
 
 输出文件（`snapshot_*.txt`）为脚本生成物，已被 `.gitignore` 忽略。
 
-## 本地避免启停噪声
 
-运行时数据库文件（`al*`/`alliving`/`lastval`）每次启停都会变更。可运行以下命令标记它们为本地忽略，使其不出现在 `git status` 中：
-
-```powershell
-git ls-files "db/wincc_oa/al0000000000/*.db" "db/wincc_oa/al0000000000/*.key" |
-  ForEach-Object { git update-index --skip-worktree $_ }
-git ls-files "db/wincc_oa/aloverflow/*.db" "db/wincc_oa/aloverflow/*.key" |
-  ForEach-Object { git update-index --skip-worktree $_ }
-git ls-files "db/wincc_oa/alliving/*.db" "db/wincc_oa/alliving/*.key" |
-  ForEach-Object { git update-index --skip-worktree $_ }
-git ls-files "db/wincc_oa/lastval/*.db" "db/wincc_oa/lastval/*.key" |
-  ForEach-Object { git update-index --skip-worktree $_ }
-```
-
-需要提交这些文件时（如 `.dbd` 变更需同步更新 `.db`），先取消标记：
-```powershell
-git ls-files "db/wincc_oa/al0000000000/*.db" ... |
-  ForEach-Object { git update-index --no-skip-worktree $_ }
-```
