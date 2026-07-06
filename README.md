@@ -4,7 +4,7 @@
 
 这是一个** WinCC OA 项目 Git 托管模板仓库**。它包含一套经实战验证的 `.gitignore` 规则（含中文注释说明每项规则的原因）和项目结构基线，解决 WinCC OA 项目跨机器 clone 后 DataManager 因缺少 `.db`/`.key` 文件无法启动的问题。
 
-核心结论：**所有 `.db`/`.key` 文件必须跟踪**（`VA_*` 归档运行时除外），因为 WinCC OA DataManager 启动时 OPEN 这些文件，不会从 `.dbd` 创建。
+核心结论：**所有 `.db`/`.key` 文件必须跟踪**（`VA_*` 和历史报警归档段除外），因为 WinCC OA DataManager 启动时 OPEN 这些文件，不会从 `.dbd` 创建。主报警归档 `al0000000000` 已跟踪；`al1780851600` 等历史段被过滤，clone 后如 DM 报错则将 `al0000000000` 重命名为所需名称。
 
 ---
 
@@ -18,6 +18,8 @@
    - `.gitattributes`（如果有）
 3. 检查 `.gitignore` 中的路径规则是否匹配你的项目结构，必要时调整
 4. `git add .` 然后提交（注意 `.db`/`.key` 必须全部进跟踪）
+   - ⚠ 本模板只跟踪 `al0000000000`（主报警归档），`al[0-9]{10}` 历史段被过滤。
+     如 DM 报找不到历史段，可将 `al0000000000` 重命名为对应段名。
 
 ### 场景 B：新建生产项目（通过 WinCC OA Console 向导创建）并托管到 Git
 
@@ -53,7 +55,7 @@ cd OriginalNewProject
 
 首次启动时，WinCC OA 会自动创建 `db/wincc_oa/VA_*/` 归档运行时目录和 `dbase.status`、`event.status` 等运行时标记文件。
 
-> 所有 `.db`/`.key` 文件均随 Git 跟踪（`VA_*` 归档运行时除外），clone 后即可使用。报警归档、在线报警、最后值缓存目录（`al*`、`alliving`、`lastval`）的启停变更通过 `skip-worktree` 屏蔽。
+> 所有 `.db`/`.key` 文件均随 Git 跟踪（`VA_*` 和历史报警归档段除外），clone 后即可使用。`al0000000000` 的主归档 `.db`/`.key` 已跟踪；历史段缺失时可将 `al0000000000` 重命名作为替代。`lastval` 的本地启停变更通过 `skip-worktree` 屏蔽。
 
 ---
 
@@ -63,6 +65,7 @@ cd OriginalNewProject
 |------|------|
 | `bin/`, `log/`, `cache/`, `tmp/`, `pmon/` | 运行时自动创建，无保留价值 |
 | `db/wincc_oa/VA_*/` | 值归档运行时目录（45 MB+，每次启动重建） |
+| `db/wincc_oa/al[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]/` （不含 `al0000000000/`） | 历史报警归档段（clone 后如 DM 报错，用 al0000000000 改名） |
 | `db/wincc_oa/vista.log`, `*.taf`, `dbase.*`, `event.status` | 运行时日志与状态标记 |
 | `**/private/`, `**/private/*.key`, `**/private/*.pem` | 私钥与敏感文件 |
 | `data/rcp/`, `data/rct/`, `data/sounds/` | 运行时子目录 |
@@ -78,7 +81,7 @@ cd OriginalNewProject
 |-------------|------|
 | `config/`（含 `host-key.pem`） | 项目配置（开发密钥一起分发） |
 | `db/**/*.dbd` | 数据库 schema 定义 |
-| `db/wincc_oa/` 全部 `.db`/`.key`（`VA_*` 除外） | 所有数据库文件，DataManager 启动时必须 OPEN |
+| `db/wincc_oa/` 全部 `.db`/`.key`（`VA_*`、`al*` 除外） | 数据库文件（主归档 `al0000000000` 的 .db/.key 已跟踪） |
 | `panels/`、`scripts/` | UI 面板与 CONTROL 脚本 |
 | `pictures/`、`images/` | 图片资源 |
 | `data/Reporting/Templates/` | BIRT/SSRS 报表模板 |
@@ -86,9 +89,10 @@ cd OriginalNewProject
 | `data/iec104/PKI/certs/*.crt` | 公开证书（非私钥） |
 | `data/opcua/client(PKI|server/PKI/CA/certs/*.der` | 公开证书（非私钥） |
 
-> **关于 `.db`/`.key`**：所有运行时数据库文件全部跟踪（除 `VA_*`）。
-> 报警归档（`al*`）和最后值缓存（`lastval/`）的启停变更通过 `git update-index --skip-worktree` 屏蔽，不会出现在 `git status` 中。
-> 仅当 `.dbd` 变更需要同步更新 `.db` 时，才取消 skip-worktree 并重新提交对应 `.db` 文件。
+> **关于 `.db`/`.key`**：所有运行时数据库文件全部跟踪（除 `VA_*` 和 `al*`）。
+> 主归档 `al0000000000` 的 `.db`/`.key` 已跟踪；`alliving`（实时报警）、`aloverflow`（溢出归档）、`alsave` 被过滤。
+> 如 clone 后 DM 找不到这些目录，可在本地从 `al0000000000` 复制改名，或调整 `.gitignore` 规则取消忽略。
+> 历史报警归档段（`al[0-9]{10}/`）同理 — 按需决定跟踪或忽略，不必清理系统数据库引用。
 
 ## 分支策略建议
 
